@@ -4,12 +4,12 @@ int main()
 {
 
 	redBlackTree<int, char> a;
-	for (int i = 10; i >0; i--)
+	for (int i = 20; i >0; i--)
 	{
 		a.push(i, 'a' + i);
 	}
-	for (auto i : a)
-		std::cout << i.first << std::endl;
 	auto r1 = a.rank(10);
+	for (auto j : a)
+		cout << j.first << "  " << j.second << endl;
 	return 0;
 }

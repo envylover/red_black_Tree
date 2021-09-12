@@ -12,10 +12,9 @@ template<typename Key
 	/*,typename Compare = Less<Ty>*/>
 	class redBlackTree
 {
-	using value_pointer_v = typename _Tree<Key, Ty>::Node*;
-	using value_type = typename _Tree<Key, Ty>;
-	_Tree<Key, Ty> _tree;
-	std::stack<value_pointer_v> p;
+	using value_pointer_v = typename _MyTree<Key, Ty>::Node*;
+	using value_type = typename _MyTree<Key, Ty>;
+	_MyTree<Key, Ty> _tree;
 	std::atomic_bool isReady = false;
 public:
 	class iterator;
@@ -35,8 +34,9 @@ public:
 		return _tree.rank(key);
 	}
 	iterator begin() {
-		
-		return {};
+		inorder(_tree._root);
+		Task<value_pointer_v>::_m_coroutine.resume();
+		return { Task<value_pointer_v>::current_p };
 	}
 	iterator end() {
 		iterator i{ (this->_tree).Tree_Max(_tree._root) };
@@ -46,12 +46,11 @@ public:
 public:
 	class iterator
 	{
-		using value_pointer_v = typename _Tree<Key, Ty>::Node*;
+		using value_pointer_v = typename _MyTree<Key, Ty>::Node*;
 		value_pointer_v p = nullptr;
 	public:
 		iterator(value_pointer_v ptr) :p(ptr) {
 		}
-
 		iterator() = default;
 		iterator(iterator&) = default;
 		iterator(iterator&& other) {
@@ -59,7 +58,15 @@ public:
 			other.p = nullptr;
 		}
 		iterator& operator ++() {
+			Task<value_pointer_v>::_m_coroutine.resume();
+			p = Task<value_pointer_v>::current_p;
 			return *this;
+		}
+		iterator& operator ++(int) {
+			iterator temp{ p };
+			Task<value_pointer_v>::_m_coroutine.resume();
+			p = Task<value_pointer_v>::current_p;
+			return temp;
 		}
 		bool operator !=(iterator& other) {
 			return p != other.p;
@@ -67,11 +74,12 @@ public:
 		bool operator ==(iterator& other) {
 			return p == other.p;
 		}
-		std::pair<Key, Ty>& operator*() {
+		std::pair<Key, Ty> operator*() {
 			if (p)
+			{
 				return p->pair;
-			else
-				throw std::string{ "error" };
+			}
+			throw string{ "error" };
 		}
 	};
 

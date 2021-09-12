@@ -1,61 +1,75 @@
-//#pragma once
-//#include<coroutine>
-//template<typename Ty>
-//struct Task
-//{
-//	struct promise_type {
-//		using value_pointer_v = Ty;
-//		auto get_return_object() {
-//			return Task<Ty>{ Handle::from_promise(*this) };
-//		}
-//		auto initial_suspend() {
-//			return std::suspend_never{};
-//		}
-//		auto final_suspend() {
-//			return std::suspend_never{};
-//		}
-//		void unhandled_exception() {
-//			std::terminate();
-//		}
-//		std::suspend_always yield_value(value_pointer_v value) noexcept {
-//			current_p = value;
-//			return {};
-//		}
-//		Task return_value() {
-//			return {};
-//		}
-//		using value_pointer_v = Ty;
-//		value_pointer_v current_p;
-//		Handle _m_coroutine;
-//	};
-//	using value_pointer_v = Ty;
-//	using Handle = std::coroutine_handle<promise_type>;
-//	Handle _m_coroutine;
-//	static value_pointer_v current_p;
-//public:
-//	bool await_ready() const { return false; }
-//	void await_resume() { return ; }
-//	void await_suspend(std::coroutine_handle<> handle) {
-//		_m_coroutine = handle;
-//	}
-//	Task setPtr(value_pointer_v p) {
-//		current_p = p;
-//	}
-//	static auto getPtr() {
-//		return current_p;
-//	}
-//	Task(Handle m_coroutine){
-//		_m_coroutine = m_coroutine;
-//	}
-//	Handle getHandle() {
-//		return _m_coroutine;
-//	}
-//};
-//template<typename Ty>
-// Task<Ty> inorder(Ty p) {
-//	if (!p)
-//		co_return;
-//	inorder(p->left);
-//	co_await p;
-//	inorder(p->right);
-//}
+#pragma once
+#include<coroutine>
+#include <stack>
+#include <map>
+using namespace std;
+template<typename Ty>
+struct Task
+{
+	struct promise_type {
+		using value_pointer_v = Ty;
+		auto get_return_object() {
+			return Task<Ty>{ Handle::from_promise(*this) };
+		}
+		suspend_always initial_suspend() noexcept {
+			return {};
+		}
+		suspend_always final_suspend() noexcept {
+			return {};
+		}
+		void unhandled_exception() {
+			std::terminate();
+		}
+		std::suspend_always yield_value(value_pointer_v value) noexcept {
+			Task::current_p = value;
+			return {};
+		}
+		void return_value(value_pointer_v p)
+		{
+			return ;
+		}
+	};
+	using value_pointer_v = Ty;
+	using Handle = std::coroutine_handle<promise_type>;
+	static Handle _m_coroutine;
+	static value_pointer_v current_p;
+public:
+	Task(Handle m_coroutine) {
+		_m_coroutine = m_coroutine;
+	}
+};
+
+template<typename Ty>
+Ty Task<Ty>::current_p = nullptr;
+
+template<typename Ty>
+std::coroutine_handle<typename Task<Ty>::promise_type> Task<Ty>::_m_coroutine = nullptr;
+
+
+template<typename Ty>
+Task<Ty> inorder(Ty p) {
+	if (p)
+	{
+		stack<pair<Ty, bool>>sp;
+		sp.push({ p,false });
+		while (!sp.empty())
+		{
+			auto root = sp.top().first;
+			auto visited = sp.top().second;
+			sp.pop();
+			if(!root)
+				continue;
+			if (visited)
+			{
+				co_yield root;
+			}
+			else
+			{
+				sp.push({ root->right, false });
+				sp.push({ root, true });
+				sp.push({ root->left, false });
+			}
+		}
+	}
+	co_return p;
+}

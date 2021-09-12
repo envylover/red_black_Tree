@@ -1,8 +1,9 @@
 #pragma once
+#include<memory>
 template<typename Key
 	, typename Ty
 	/*, typename Compare = Less<Ty>*/>
-	struct _Tree
+	struct _MyTree
 {
 	using RANK = unsigned long long;
 	struct Node
@@ -16,15 +17,16 @@ template<typename Key
 		Node* right = nullptr;
 		Node* left = nullptr;
 		Node* parent = nullptr;
+		Node* pre = nullptr;
+		Node* suc = nullptr;
 		size_t size = 1;
 	}*_root = nullptr;
 	size_t _size = 0;
-	_Tree() {};
-	~_Tree() {
+	_MyTree() {};
+	~_MyTree() {
 		if (_root)
 			delete _root;
 	}
-
 	using value_type = Ty;
 	using pNode = Node*;
 	void Insert(Key key, value_type value) {
@@ -144,6 +146,8 @@ template<typename Key
 			y = y->parent;
 		}
 		return r;
+	}
+	void Inorder(void) {
 	}
 private:
 
